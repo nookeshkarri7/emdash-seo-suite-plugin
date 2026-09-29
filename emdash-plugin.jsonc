@@ -4,7 +4,7 @@
 	"slug": "seo-suite",
 	"name": "SEO Suite",
 	"publisher": "did:plc:suw5qc22clrlpslfo6qapiu4", // placeholder.bsky.social — replace before publish
-	"version": "0.1.0",
+	"version": "0.1.1",
 
 	"license": "MIT",
 	"author": { "name": "SEO Suite Maintainers", "email": "nookesh@qranalytica.com" },
