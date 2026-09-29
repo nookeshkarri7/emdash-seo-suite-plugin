@@ -7,8 +7,8 @@
 	"version": "0.1.0",
 
 	"license": "MIT",
-	"author": { "name": "SEO Suite Maintainers", "email": "maintainers@example.com" },
-	"security": { "email": "security@example.com" },
+	"author": { "name": "SEO Suite Maintainers", "email": "nookesh@qranalytica.com" },
+	"security": { "email": "nookesh@qranalytica.com" },
 	"description": "Focus-keyphrase analysis, readability, JSON-LD, redirects, and SEO health for EmDash.",
 	"keywords": ["seo", "json-ld", "redirects", "readability", "focus-keyphrase"],
 	"repo": "https://github.com/nookeshkarri7/emdash-seo-suite-plugin",
