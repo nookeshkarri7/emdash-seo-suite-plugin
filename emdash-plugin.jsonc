@@ -1,0 +1,78 @@
+{
+	"$schema": "./node_modules/@emdash-cms/plugin-cli/schemas/emdash-plugin.schema.json",
+
+	"slug": "seo-suite",
+	"name": "SEO Suite",
+	"publisher": "did:plc:gojiv3xdlwobtke4csnksyyb", // placeholder.bsky.social — replace before publish
+	"version": "0.1.0",
+
+	"license": "MIT",
+	"author": { "name": "SEO Suite Maintainers", "email": "maintainers@example.com" },
+	"security": { "email": "security@example.com" },
+	"description": "Focus-keyphrase analysis, readability, JSON-LD, redirects, and SEO health for EmDash. Complements the built-in SEO panel, sitemap, and robots.txt.",
+	"keywords": ["seo", "json-ld", "redirects", "readability", "focus-keyphrase"],
+	"repo": "https://github.com/example/emdash-seo-suite",
+
+	"capabilities": [
+		"schema:read",
+		"content:read",
+		"content:write",
+		"admin.editor-draft:read",
+		"admin.editor-draft:patch",
+		"media:read",
+		"taxonomies:read",
+		"redirects:read",
+		"redirects:write",
+		"hooks.content-policy:register"
+	],
+	"allowedHosts": [],
+	"storage": {},
+
+	"admin": {
+		"pages": [
+			{ "path": "/settings", "label": "SEO settings", "icon": "settings" },
+			{ "path": "/health", "label": "SEO health", "icon": "chart" },
+			{ "path": "/redirects", "label": "Redirects", "icon": "link" }
+		],
+		"widgets": [
+			{ "id": "seo-overview", "title": "SEO Suite", "size": "half" }
+		],
+		"editorPanels": [
+			{
+				"id": "analysis",
+				"title": "SEO Suite",
+				"route": "editor/analysis",
+				"order": 10,
+				"collections": ["posts", "pages"],
+				"draft": {
+					"read": { "fields": ["title", "excerpt", "content"] },
+					"patch": { "fields": ["title", "excerpt"] }
+				}
+			}
+		],
+		"settingsSchema": {
+			"organizationName": {
+				"type": "string",
+				"label": "Organization name",
+				"description": "Used in Organization JSON-LD"
+			},
+			"schemaType": {
+				"type": "string",
+				"label": "Default article schema",
+				"description": "BlogPosting or Article",
+				"default": "BlogPosting"
+			},
+			"publishPolicy": {
+				"type": "string",
+				"label": "Publish policy",
+				"description": "off | warn | block",
+				"default": "warn"
+			},
+			"twitterHandle": {
+				"type": "string",
+				"label": "Twitter / X handle",
+				"description": "Without @"
+			}
+		}
+	}
+}
