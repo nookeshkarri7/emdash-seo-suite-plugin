@@ -1,6 +1,6 @@
 # SEO Suite
 
-Sandboxed EmDash plugin that adds Yoast-style SEO coaching on top of EmDash’s built-in SEO panel, sitemap, and robots.txt.
+Sandboxed EmDash plugin that adds SEO analysis and coaching on top of EmDash’s built-in SEO panel, sitemap, and robots.txt.
 
 ## Features
 
@@ -24,8 +24,8 @@ pnpm run dev
 
 ## Configure before publishing
 
-1. Replace `publisher` in `emdash-plugin.jsonc` with your Atmosphere DID/handle (remove the placeholder).
-2. Set a real public GitHub `repo` URL, author, and security contact.
+1. Replace `publisher` in `emdash-plugin.jsonc` with your Atmosphere DID/handle if still using the scaffold placeholder.
+2. Confirm `repo` points at this public GitHub repository (`https://github.com/nookeshkarri7/emdash-seo-suite-plugin`).
 3. Log in and publish:
 
 ```sh

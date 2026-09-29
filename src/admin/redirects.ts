@@ -73,6 +73,7 @@ export function buildRedirectsPage(opts: {
 	blocks.push({
 		type: "table",
 		block_id: "redirects_table",
+		page_action_id: "redirects_page",
 		columns: [
 			{ key: "source", label: "Source" },
 			{ key: "destination", label: "Destination" },
@@ -108,7 +109,7 @@ export function buildRedirectsPage(opts: {
 
 	blocks.push({
 		type: "code",
-		language: "json",
+		language: "jsonc",
 		code: JSON.stringify(
 			opts.redirects.map((r) => ({
 				id: r.id,

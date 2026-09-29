@@ -8,7 +8,7 @@ export type PageMetadataContribution =
 			hreflang?: string;
 			key?: string;
 	  }
-	| { kind: "jsonld"; id?: string; graph: object | object[] };
+	| { kind: "jsonld"; id?: string; graph: Record<string, unknown> | Record<string, unknown>[] };
 
 export interface SiteSeoSettings {
 	organizationName: string;

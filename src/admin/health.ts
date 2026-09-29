@@ -49,6 +49,7 @@ export function buildHealthPage(opts: {
 	blocks.push({
 		type: "table",
 		block_id: "health_table",
+		page_action_id: "health_page",
 		columns: [
 			{ key: "title", label: "Entry" },
 			{ key: "collection", label: "Collection" },

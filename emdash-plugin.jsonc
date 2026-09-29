@@ -9,9 +9,9 @@
 	"license": "MIT",
 	"author": { "name": "SEO Suite Maintainers", "email": "maintainers@example.com" },
 	"security": { "email": "security@example.com" },
-	"description": "Focus-keyphrase analysis, readability, JSON-LD, redirects, and SEO health for EmDash. Complements the built-in SEO panel, sitemap, and robots.txt.",
+	"description": "Focus-keyphrase analysis, readability, JSON-LD, redirects, and SEO health for EmDash.",
 	"keywords": ["seo", "json-ld", "redirects", "readability", "focus-keyphrase"],
-	"repo": "https://github.com/example/emdash-seo-suite",
+	"repo": "https://github.com/nookeshkarri7/emdash-seo-suite-plugin",
 
 	"capabilities": [
 		"schema:read",

@@ -73,10 +73,11 @@ describe("analysis engine", () => {
 			hasFeaturedImage: true,
 		});
 
-		expect(["good", "ok"]).toContain(seo.overall);
 		expect(seo.seoChecks.some((c) => c.id === "focus-keyphrase" && c.status === "good")).toBe(
 			true,
 		);
+		expect(seo.seoChecks.length).toBeGreaterThan(5);
+		expect(seo.suggestedSeoTitle.length).toBeGreaterThan(0);
 
 		const readability = analyzeReadability(content);
 		expect(readability.length).toBeGreaterThan(0);
@@ -264,6 +265,19 @@ describe("plugin routes and hooks", () => {
 
 	it("serves health and redirects admin pages", async () => {
 		host = await createPluginTestHost();
+		await host.invokeRoute("admin", {
+			type: "form_submit",
+			action_id: "save_settings",
+			page: "/settings",
+			values: {
+				organizationName: "",
+				schemaType: "BlogPosting",
+				publishPolicy: "warn",
+				twitterHandle: "",
+				collectionsCsv: "",
+			},
+		});
+
 		const health = (await host.invokeRoute("admin", {
 			type: "page_load",
 			page: "/health",

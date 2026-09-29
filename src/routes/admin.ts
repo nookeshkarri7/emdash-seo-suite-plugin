@@ -57,37 +57,57 @@ async function listRedirectRows(ctx: PluginContext) {
 }
 
 async function scanHealth(ctx: PluginContext, settings: SiteSeoSettings) {
-	const collections = parseCollections(settings.collectionsCsv);
+	const configured = parseCollections(settings.collectionsCsv);
 	const issues: HealthIssue[] = [];
 	let scanned = 0;
 
-	for (const collection of collections) {
+	let known = new Set<string>();
+	try {
+		if (ctx.schema?.listCollections) {
+			const collections = await ctx.schema.listCollections();
+			known = new Set(collections.map((c) => c.slug));
+		}
+	} catch {
+		known = new Set();
+	}
+
+	const targets =
+		known.size === 0 ? [] : configured.filter((slug) => known.has(slug));
+
+	for (const collection of targets) {
 		if (!ctx.content?.list) continue;
-		const page = await ctx.content.list(collection, {
-			limit: 40,
-			where: { status: "published" },
-		});
-		for (const item of page.items) {
-			scanned += 1;
-			const problems: string[] = [];
-			const title =
-				typeof item.data.title === "string" ? item.data.title : item.slug ?? item.id;
-			const description = item.seo?.description?.trim() || "";
-			const excerpt = typeof item.data.excerpt === "string" ? item.data.excerpt.trim() : "";
-			if (!description && !excerpt) problems.push("missing description");
-			if (item.seo?.noIndex) problems.push("noindex");
-			if (!item.seo?.image) problems.push("missing OG image");
-			const focus = await getFocusKeyphrase(ctx, collection, item.id);
-			if (!focus) problems.push("missing focus keyphrase");
-			if (problems.length > 0) {
-				issues.push({
-					collection,
-					id: item.id,
-					title,
-					locale: item.locale,
-					problems,
-				});
+		try {
+			const page = await ctx.content.list(collection, {
+				limit: 40,
+				where: { status: "published" },
+			});
+			for (const item of page.items) {
+				scanned += 1;
+				const problems: string[] = [];
+				const title =
+					typeof item.data.title === "string" ? item.data.title : item.slug ?? item.id;
+				const description = item.seo?.description?.trim() || "";
+				const excerpt = typeof item.data.excerpt === "string" ? item.data.excerpt.trim() : "";
+				if (!description && !excerpt) problems.push("missing description");
+				if (item.seo?.noIndex) problems.push("noindex");
+				if (!item.seo?.image) problems.push("missing OG image");
+				const focus = await getFocusKeyphrase(ctx, collection, item.id);
+				if (!focus) problems.push("missing focus keyphrase");
+				if (problems.length > 0) {
+					issues.push({
+						collection,
+						id: item.id,
+						title,
+						locale: item.locale,
+						problems,
+					});
+				}
 			}
+		} catch (error) {
+			ctx.log.warn("SEO health scan skipped collection", {
+				collection,
+				error: error instanceof Error ? error.message : String(error),
+			});
 		}
 	}
 
@@ -122,7 +142,7 @@ export async function handleAdminRoute(
 					? (asString(values.publishPolicy) as "off" | "block")
 					: "warn",
 			twitterHandle: asString(values.twitterHandle),
-			collectionsCsv: asString(values.collectionsCsv) || settings.collectionsCsv,
+			collectionsCsv: asString(values.collectionsCsv),
 		});
 		return {
 			...buildSettingsPage(next),
