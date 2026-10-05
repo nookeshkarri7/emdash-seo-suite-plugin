@@ -17,7 +17,23 @@ export function buildRedirectsPage(opts: {
 		{ type: "header", text: "Redirect manager" },
 		{
 			type: "section",
-			text: "Create and maintain redirects. Pass host revisions carefully — stale edits return a conflict.",
+			text: "Preserve traffic and backlinks when URLs move. Use permanent redirects for lasting moves and temporary redirects for short-lived changes.",
+		},
+		{
+			type: "stats",
+			items: [
+				{ label: "Total", value: opts.redirects.length },
+				{
+					label: "Active",
+					value: opts.redirects.filter((redirect) => redirect.enabled).length,
+				},
+				{
+					label: "Permanent",
+					value: opts.redirects.filter((redirect) =>
+						["301", "308"].includes(redirect.type),
+					).length,
+				},
+			],
 		},
 	];
 
@@ -77,48 +93,30 @@ export function buildRedirectsPage(opts: {
 		columns: [
 			{ key: "source", label: "Source" },
 			{ key: "destination", label: "Destination" },
-			{ key: "type", label: "Type" },
-			{ key: "enabled", label: "Enabled" },
+			{ key: "type", label: "Type", format: "badge" },
+			{ key: "enabled", label: "Status", format: "badge" },
+			{ key: "remove", label: "", format: "element" },
 		],
 		rows: opts.redirects.map((row) => ({
 			source: row.source,
 			destination: row.destination,
 			type: row.type,
-			enabled: row.enabled ? "yes" : "no",
+			enabled: row.enabled ? "Active" : "Disabled",
+			remove: {
+				type: "button",
+				action_id: "delete_redirect",
+				label: "Delete",
+				style: "danger",
+				value: { id: row.id, _rev: row._rev },
+				confirm: {
+					title: "Delete redirect?",
+					text: `${row.source} will stop redirecting to ${row.destination}.`,
+					confirm: "Delete",
+					deny: "Cancel",
+					style: "danger",
+				},
+			},
 		})),
-	});
-
-	blocks.push({
-		type: "form",
-		block_id: "delete_redirect",
-		fields: [
-			{
-				type: "text_input",
-				action_id: "redirect_id",
-				label: "Redirect ID to delete",
-				placeholder: "Paste an ID from above listing helpers",
-			},
-			{
-				type: "text_input",
-				action_id: "_rev",
-				label: "Revision (_rev)",
-			},
-		],
-		submit: { action_id: "delete_redirect", label: "Delete redirect" },
-	});
-
-	blocks.push({
-		type: "code",
-		language: "jsonc",
-		code: JSON.stringify(
-			opts.redirects.map((r) => ({
-				id: r.id,
-				source: r.source,
-				_rev: r._rev,
-			})),
-			null,
-			2,
-		),
 	});
 
 	return { blocks };

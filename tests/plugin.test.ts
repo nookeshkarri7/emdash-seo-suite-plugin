@@ -2,6 +2,9 @@ import { afterEach, describe, expect, it } from "vitest";
 
 import { createPluginTestHost, type PluginTestHost } from "@emdash-cms/plugin-test";
 
+import { buildHealthPage } from "../src/admin/health.js";
+import { buildAnalysisPanel } from "../src/admin/panel.js";
+import { buildRedirectsPage } from "../src/admin/redirects.js";
 import { analyzeReadability } from "../src/analysis/readability.js";
 import { analyzeSeo } from "../src/analysis/seo.js";
 import { runFullAnalysis } from "../src/analysis/score.js";
@@ -143,6 +146,85 @@ describe("json-ld builder", () => {
 			contributions.some((c) => c.kind === "jsonld" && c.id === "seo-suite:breadcrumbs"),
 		).toBe(true);
 		expect(contributions.some((c) => c.kind === "meta" && c.name === "twitter:site")).toBe(true);
+	});
+});
+
+describe("admin UI", () => {
+	it("prioritizes health issues and links directly to affected entries", () => {
+		const page = buildHealthPage({
+			scanned: 4,
+			issues: [
+				{
+					collection: "posts",
+					id: "post-1",
+					title: "Needs SEO",
+					locale: "en",
+					problems: ["missing description", "missing OG image"],
+				},
+			],
+		});
+
+		expect(page.blocks.some((block) => block.type === "meter")).toBe(true);
+		const table = page.blocks.find((block) => block.type === "table");
+		expect(table?.rows[0]?.open).toMatchObject({
+			type: "link",
+			target: { kind: "content", collection: "posts", id: "post-1" },
+		});
+	});
+
+	it("provides safe inline redirect deletion", () => {
+		const page = buildRedirectsPage({
+			redirects: [
+				{
+					id: "redirect-1",
+					source: "/old",
+					destination: "/new",
+					type: "301",
+					enabled: true,
+					_rev: "rev-1",
+				},
+			],
+		});
+
+		const table = page.blocks.find((block) => block.type === "table");
+		expect(table?.rows[0]?.remove).toMatchObject({
+			type: "button",
+			action_id: "delete_redirect",
+			value: { id: "redirect-1", _rev: "rev-1" },
+			confirm: { style: "danger" },
+		});
+		expect(page.blocks.some((block) => block.type === "code")).toBe(false);
+	});
+
+	it("shows actionable numeric editor scores", () => {
+		const analysis = runFullAnalysis({
+			content: extractContent({
+				title: "Useful SEO guide",
+				excerpt: "A concise SEO guide for editors.",
+				slug: "useful-seo-guide",
+				content: "Useful SEO guide content with practical advice.",
+			}),
+			seo: {
+				title: "Useful SEO guide",
+				description: "A concise SEO guide for editors.",
+				image: null,
+				canonical: null,
+				noIndex: false,
+			},
+			focusKeyphrase: "SEO guide",
+		});
+		const panel = buildAnalysisPanel({
+			focusKeyphrase: "SEO guide",
+			analysis,
+			seoTitle: "Useful SEO guide",
+			seoDescription: "A concise SEO guide for editors.",
+			noIndex: false,
+		});
+
+		expect(panel.blocks.filter((block) => block.type === "meter")).toHaveLength(0);
+		expect(panel.blocks.some((block) => block.type === "columns")).toBe(true);
+		expect(panel.blocks.some((block) => block.type === "tab")).toBe(true);
+		expect(panel.blocks.some((block) => block.type === "banner")).toBe(true);
 	});
 });
 

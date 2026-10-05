@@ -72,6 +72,12 @@
 				"type": "string",
 				"label": "Twitter / X handle",
 				"description": "Without @"
+			},
+			"collectionsCsv": {
+				"type": "string",
+				"label": "Collections to scan",
+				"description": "Comma-separated collection slugs included in SEO health scans",
+				"default": "posts,pages"
 			}
 		}
 	}

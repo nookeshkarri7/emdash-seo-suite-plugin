@@ -13,6 +13,15 @@ function checkRows(checks: AnalysisCheck[]): Block {
 	};
 }
 
+function scoreChecks(checks: AnalysisCheck[]): number {
+	if (checks.length === 0) return 0;
+	const points = checks.reduce(
+		(total, check) => total + (check.status === "good" ? 100 : check.status === "ok" ? 60 : 0),
+		0,
+	);
+	return Math.round(points / checks.length);
+}
+
 export function buildAnalysisPanel(opts: {
 	focusKeyphrase: string;
 	analysis: FullAnalysis | null;
@@ -57,13 +66,70 @@ export function buildAnalysisPanel(opts: {
 	}
 
 	const a = opts.analysis;
+	const seoScore = scoreChecks(a.seoChecks);
+	const readabilityScore = scoreChecks(a.readabilityChecks);
+	const priorities = [...a.seoChecks, ...a.readabilityChecks]
+		.filter((check) => check.status !== "good")
+		.sort(
+			(left, right) =>
+				(left.status === "bad" ? 0 : 1) - (right.status === "bad" ? 0 : 1),
+		)
+		.slice(0, 3);
+
 	blocks.push({
 		type: "stats",
 		items: [
-			{ label: "SEO", value: statusEmoji(a.overall) },
-			{ label: "Readability", value: statusEmoji(a.readabilityOverall) },
+			{ label: "SEO score", value: `${seoScore}%`, description: statusEmoji(a.overall) },
+			{
+				label: "Readability",
+				value: `${readabilityScore}%`,
+				description: statusEmoji(a.readabilityOverall),
+			},
+			{
+				label: "Indexability",
+				value: opts.noIndex ? "Noindex" : "Indexable",
+				description: opts.noIndex ? "Excluded from search" : "Eligible for search",
+			},
 		],
 	});
+	blocks.push({
+		type: "columns",
+		columns: [
+			[
+				{
+					type: "meter",
+					label: "SEO",
+					value: seoScore,
+					max: 100,
+					custom_value: `${seoScore}%`,
+				},
+			],
+			[
+				{
+					type: "meter",
+					label: "Readability",
+					value: readabilityScore,
+					max: 100,
+					custom_value: `${readabilityScore}%`,
+				},
+			],
+		],
+	});
+
+	if (priorities.length > 0) {
+		blocks.push({
+			type: "banner",
+			variant: priorities.some((check) => check.status === "bad") ? "alert" : "default",
+			title: "Top improvements",
+			description: priorities.map((check) => `• ${check.label}: ${check.detail}`).join("\n"),
+		});
+	} else {
+		blocks.push({
+			type: "banner",
+			title: "Ready for search",
+			description: "All SEO and readability checks passed.",
+		});
+	}
 
 	blocks.push({ type: "header", text: "Search snippet preview" });
 	blocks.push({
@@ -71,12 +137,15 @@ export function buildAnalysisPanel(opts: {
 		text: `*${a.snippetTitle}*\n${a.snippetUrl}\n${a.snippetDescription || "—"}`,
 	});
 
-	blocks.push({ type: "header", text: "SEO checklist" });
-	blocks.push(checkRows(a.seoChecks));
+	blocks.push({
+		type: "tab",
+		panels: [
+			{ label: "SEO checklist", blocks: [checkRows(a.seoChecks)] },
+			{ label: "Readability", blocks: [checkRows(a.readabilityChecks)] },
+		],
+	});
 
-	blocks.push({ type: "header", text: "Readability" });
-	blocks.push(checkRows(a.readabilityChecks));
-
+	blocks.push({ type: "header", text: "Apply recommendations" });
 	blocks.push({
 		type: "form",
 		block_id: "suggestions",
@@ -106,8 +175,18 @@ export function buildAnalysisPanel(opts: {
 	});
 
 	blocks.push({
-		type: "section",
-		text: `Indexability: ${opts.noIndex ? "noindex" : "indexable"}\nSaved SEO title: ${opts.seoTitle || "—"}\nSaved SEO description: ${opts.seoDescription || "—"}`,
+		type: "accordion",
+		label: "Saved SEO values",
+		blocks: [
+			{
+				type: "fields",
+				fields: [
+					{ label: "SEO title", value: opts.seoTitle || "Not set" },
+					{ label: "Meta description", value: opts.seoDescription || "Not set" },
+					{ label: "Robots", value: opts.noIndex ? "noindex" : "index, follow" },
+				],
+			},
+		],
 	});
 
 	return { blocks };

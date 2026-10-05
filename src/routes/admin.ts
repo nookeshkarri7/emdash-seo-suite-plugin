@@ -37,6 +37,14 @@ function interactionValues(input: unknown): Record<string, unknown> {
 		: {};
 }
 
+function interactionValue(input: unknown): Record<string, unknown> {
+	if (!input || typeof input !== "object") return {};
+	const value = (input as Record<string, unknown>).value;
+	return value && typeof value === "object" && !Array.isArray(value)
+		? (value as Record<string, unknown>)
+		: {};
+}
+
 async function listRedirectRows(ctx: PluginContext) {
 	if (!ctx.redirects?.list || !ctx.redirects.get) return [];
 	const listed = await ctx.redirects.list({ limit: 50 });
@@ -123,12 +131,16 @@ export async function handleAdminRoute(
 	const type = interactionType(routeCtx.input);
 	const action = interactionAction(routeCtx.input);
 	const values = interactionValues(routeCtx.input);
+	const value = interactionValue(routeCtx.input);
 	const page = interactionPage(routeCtx.input);
 
 	if (surface === "dashboard-widget") {
+		const { issues, scanned } = await scanHealth(ctx, settings);
 		return buildOverviewWidget({
 			organizationName: settings.organizationName,
 			publishPolicy: settings.publishPolicy,
+			issues,
+			scanned,
 		});
 	}
 
@@ -171,13 +183,16 @@ export async function handleAdminRoute(
 			}
 		}
 
-		if (type === "form_submit" && action === "delete_redirect") {
+		if (
+			(type === "form_submit" || type === "block_action") &&
+			action === "delete_redirect"
+		) {
 			try {
 				if (!ctx.redirects || !("delete" in ctx.redirects) || !ctx.redirects.delete) {
 					throw new Error("redirects:write is unavailable");
 				}
-				await ctx.redirects.delete(asString(values.redirect_id), {
-					_rev: asString(values._rev),
+				await ctx.redirects.delete(asString(value.id) || asString(values.redirect_id), {
+					_rev: asString(value._rev) || asString(values._rev),
 				});
 				message = "Redirect deleted";
 			} catch (error) {
